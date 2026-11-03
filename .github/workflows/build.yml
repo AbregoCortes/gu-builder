@@ -1,4 +1,4 @@
-name: Build gu-native Local
+name: Build gu-native Direct
 
 on:
   push:
@@ -20,13 +20,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build python3-dev git
+          sudo apt-get install -y build-essential cmake ninja-build python3-dev curl unzip
           pip install --upgrade pip
 
-      - name: Clone gu-native source code safely
+      - name: Download and extract gu-native source
         run: |
-          git clone https://github.com/MonsterHunterGenUltimate/gu-native.git temp-gu
-          # Copiamos las herramientas necesarias y movemos tu exefs a la estructura correcta
+          curl -L https://github.com/MonsterHunterGenUltimate/gu-native/archive/refs/heads/main.zip -o gu.zip
+          unzip -q gu.zip
+          mv gu-native-main temp-gu
           mkdir -p temp-gu/exefs
           cp -r ${{ github.workspace }}/exefs/* temp-gu/exefs/
         shell: bash
