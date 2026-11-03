@@ -1,1 +1,51 @@
+name: Build gu-native Local
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build python3-dev git
+          pip install --upgrade pip
+
+      - name: Clone gu-native source code safely
+        run: |
+          git clone https://github.com/MonsterHunterGenUltimate/gu-native.git temp-gu
+          # Copiamos las herramientas necesarias y movemos tu exefs a la estructura correcta
+          mkdir -p temp-gu/exefs
+          cp -r ${{ github.workspace }}/exefs/* temp-gu/exefs/
+        shell: bash
+
+      - name: Run build script
+        run: |
+          cd temp-gu
+          python3 tools/build_game.py --exefs ./exefs
+        shell: bash
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p final-output
+          cp temp-gu/build/libmhgugame.so final-output/
+          cp temp-gu/build/libmhgugame.id final-output/
+        shell: bash
+
+      - name: Upload compiled artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gu-native-binaries
+          path: final-output/*
